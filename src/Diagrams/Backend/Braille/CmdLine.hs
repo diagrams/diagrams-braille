@@ -23,8 +23,7 @@
 -- <http://projects.haskell.org/diagrams/doc/cmdline.html>.
 --
 -----------------------------------------------------------------------------
-module Diagrams.Backend.Braille.CmdLine
-  (
+module Diagrams.Backend.Braille.CmdLine (
     -- * General form of @main@
     -- $mainwith
     mainWith
@@ -51,13 +50,12 @@ defaultMain = mainWith
 instance TypeableFloat n => Mainable (QDiagram Rasterific V2 n Any) where
   type MainOpts (QDiagram Rasterific V2 n Any) = DiagramOpts
 
-  mainRender opts d = do
-      chooseRender opts d
+  mainRender opts d = chooseRender opts d
 
-chooseRender :: TypeableFloat n => DiagramOpts -> QDiagram Rasterific V2 n Any -> IO ()
+chooseRender :: TypeableFloat n => DiagramOpts -> QDiagram Rasterific V2 n Any -> IO () -- -> QDiagram Rasterific V2 n Any -> IO ()
 chooseRender opts d
   | null path = putStr $ rasterBraille sz d
-  | otherwise = renderRasterific path sz d
+  | otherwise = renderBraille path sz d
   where
     path = opts^.output
     sz   = fromIntegral <$> mkSizeSpec2D (opts^.width) (opts^.height)

@@ -20,5 +20,6 @@ main = multiMain [
   , ("decagon", decagon 1)
   , ("hendecagon", hendecagon 1)
   , ("dodecagon", dodecagon 1)
+  , ("ellipse", ellipse 0.5)
   , ("circle", circle 1)
   ]

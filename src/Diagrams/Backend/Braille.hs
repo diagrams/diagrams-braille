@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
-module Diagrams.Backend.Braille (img2brl, rasterBraille) where
+module Diagrams.Backend.Braille (renderBraille, rasterBraille, img2brl) where
 
 import Codec.Picture (PixelRGBA8(PixelRGBA8), imageWidth, imageHeight, pixelAt)
 import Data.Char (chr)
@@ -7,6 +7,8 @@ import Diagrams.Core (renderDia)
 import Diagrams.Backend.Rasterific
 
 rasterBraille sz = img2brl . renderDia Rasterific (RasterificOptions sz)
+
+renderBraille fp sz = writeFile fp . rasterBraille sz
 
 img2brl img = unlines $ map (\y -> map (f y) columnIndices) lineIndices where
   f y x = chr $ foldr (g (y,x)) 0x2800 $ zip offsets dotValues
