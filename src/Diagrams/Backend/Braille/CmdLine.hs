@@ -1,7 +1,5 @@
 {-# LANGUAGE CPP               #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TemplateHaskell   #-}
-{-# LANGUAGE TupleSections     #-}
 {-# LANGUAGE TypeFamilies      #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
@@ -43,10 +41,8 @@ module Diagrams.Backend.Braille.CmdLine
 import           Diagrams.Backend.CmdLine
 import           Diagrams.Backend.Rasterific
 import           Diagrams.Prelude            hiding (height, interval, option,
-                                              output, width)
+                                                     output, width)
 import           Diagrams.Backend.Braille
-
-import           Options.Applicative
 
 -- | 'mainWith' specialised to 'Diagram' 'Rasterific'.
 defaultMain :: Diagram Rasterific -> IO ()

@@ -3,7 +3,7 @@ module Diagrams.Backend.Braille (img2brl, rasterBraille) where
 
 import Codec.Picture (PixelRGBA8(PixelRGBA8), imageWidth, imageHeight, pixelAt)
 import Data.Char (chr)
-import Diagrams.Prelude
+import Diagrams.Core (renderDia)
 import Diagrams.Backend.Rasterific
 
 rasterBraille sz = img2brl . renderDia Rasterific (RasterificOptions sz)
