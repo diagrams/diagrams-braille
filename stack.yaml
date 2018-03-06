@@ -1,0 +1,8 @@
+resolver: lts-10.7
+
+packages:
+- .
+
+# Dependency packages to be pulled from upstream that are not in the resolver.
+extra-deps:
+- diagrams-rasterific-1.4

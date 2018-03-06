@@ -1,0 +1,42 @@
+name:                diagrams-braille
+version:             0.1.0.0
+github:              "mlang/diagrams-braille"
+license:             BSD3
+author:              "Mario Lang"
+maintainer:          "mlang@blind.guru"
+copyright:           "2018 Mario Lang"
+
+extra-source-files:
+- README.md
+
+# Metadata used when publishing your package
+synopsis:            Braille rendering for Diagrams
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on Github at <https://github.com/mlang/diagrams-braille#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- diagrams
+- diagrams-lib
+- diagrams-core
+- diagrams-rasterific
+- JuicyPixels
+- optparse-applicative
+
+library:
+  source-dirs: src
+
+executables:
+  brldia:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - diagrams-braille
