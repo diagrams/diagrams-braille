@@ -33,26 +33,25 @@ module Diagrams.Backend.Braille.CmdLine (
   , multiMain
 
     -- * Backend tokens
-  , Rasterific
+  , Braille
   , B
   ) where
 
 import           Diagrams.Backend.CmdLine
-import           Diagrams.Backend.Rasterific
 import           Diagrams.Prelude            hiding (height, interval, option,
                                                      output, width)
 import           Diagrams.Backend.Braille
 
 -- | 'mainWith' specialised to 'Diagram' 'Rasterific'.
-defaultMain :: Diagram Rasterific -> IO ()
+defaultMain :: Diagram B -> IO ()
 defaultMain = mainWith
 
-instance TypeableFloat n => Mainable (QDiagram Rasterific V2 n Any) where
-  type MainOpts (QDiagram Rasterific V2 n Any) = DiagramOpts
+instance TypeableFloat n => Mainable (QDiagram B V2 n Any) where
+  type MainOpts (QDiagram B V2 n Any) = DiagramOpts
 
   mainRender opts d = chooseRender opts d
 
-chooseRender :: TypeableFloat n => DiagramOpts -> QDiagram Rasterific V2 n Any -> IO () -- -> QDiagram Rasterific V2 n Any -> IO ()
+chooseRender :: TypeableFloat n => DiagramOpts -> QDiagram B V2 n Any -> IO () -- -> QDiagram Rasterific V2 n Any -> IO ()
 chooseRender opts d | null path = putStr $ rasterBraille sz d
                     | otherwise = renderBraille path sz d
   where
@@ -64,11 +63,11 @@ chooseRender opts d | null path = putStr $ rasterBraille sz d
 -- specifying the name of the diagram that should be rendered.  The
 -- list of available diagrams may also be printed by passing the
 -- option @--list@.
-multiMain :: [(String, Diagram Rasterific)] -> IO ()
+multiMain :: [(String, Diagram B)] -> IO ()
 multiMain = mainWith
 
-instance TypeableFloat n => Mainable [(String,QDiagram Rasterific V2 n Any)] where
-  type MainOpts [(String,QDiagram Rasterific V2 n Any)]
-      = (MainOpts (QDiagram Rasterific V2 n Any), DiagramMultiOpts)
+instance TypeableFloat n => Mainable [(String, QDiagram B V2 n Any)] where
+  type MainOpts [(String, QDiagram B V2 n Any)]
+      = (MainOpts (QDiagram B V2 n Any), DiagramMultiOpts)
 
   mainRender = defaultMultiMainRender

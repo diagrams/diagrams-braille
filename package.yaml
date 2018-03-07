@@ -20,11 +20,17 @@ description:         Please see the README on Github at <https://github.com/mlan
 
 dependencies:
 - base >= 4.7 && < 5
+- bytestring
+- containers
 - diagrams-lib
 - diagrams-core
 - diagrams-rasterific
+- filepath
+- hashable
 - JuicyPixels
+- mtl
 - optparse-applicative
+- Rasterific
 - time
 
 library:
