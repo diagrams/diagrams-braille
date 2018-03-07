@@ -140,18 +140,19 @@ liftR :: RenderR a -> RenderM n a
 liftR = lift
 
 runRenderM :: TypeableFloat n => RenderM n a -> RenderR a
-runRenderM = flip runReaderT (mempty # recommendFillColor transparent)
+runRenderM = (`runReaderT` sty) where
+  sty = mempty # recommendFillColor transparent
 
 -- From Diagrams.Core.Types.
 instance TypeableFloat n => Backend Braille V2 n where
   newtype Render  Braille V2 n = R (RenderM n ())
-  type Result  Braille V2 n = Image PixelRGBA8
+  type Result  Braille V2 n = String
   data Options Braille V2 n = RasterificOptions
           { _sizeSpec  :: SizeSpec V2 n -- ^ The requested size of the output
           } deriving Show
 
   renderRTree _ opts t =
-    R.renderDrawing (round w) (round h) bgColor r
+    img2brl $ R.renderDrawing (round w) (round h) bgColor r
     where
       r       = runRenderM . runR . fromRTree $ t
       V2 w h  = specToSize 100 (opts^.sizeSpec)
@@ -378,21 +379,20 @@ instance TypeableFloat n => Renderable (DImage n Embedded) Braille where
 
 -- Saving files --------------------------------------------------------
 
-rasterBraille sz = img2brl . renderDia Braille (RasterificOptions sz)
+rasterBraille sz = renderDia Braille (RasterificOptions sz)
 
--- | Render a 'Rasterific' diagram to a file with the given size. The
+-- | Render a 'Braille' diagram to a file with the given size. The
 --   format is determined by the extension (@.png@, @.tif@, @.bmp@, @.jpg@ and
---   @.pdf@ supported. (jpeg quality is 80, use 'writeJpeg' to choose
---   quality).
+--   @.pdf@ supported.
 renderBraille :: TypeableFloat n => FilePath -> SizeSpec V2 n
               -> QDiagram Braille V2 n Any -> IO ()
 renderBraille outFile spec d =
   case takeExtension outFile of
-    _      -> writeBrl outFile img
+    _      -> writeBrl outFile brl
   where
-    img = renderDia Braille (RasterificOptions spec) d
+    brl = renderDia Braille (RasterificOptions spec) d
 
-writeBrl fp = writeFile fp . img2brl
+writeBrl = writeFile
 
 img2brl img = unlines $ map (\y -> map (f y) columnIndices) lineIndices where
   f y x = chr $ foldr (g (y,x)) 0x2800 $ zip offsets dotValues
