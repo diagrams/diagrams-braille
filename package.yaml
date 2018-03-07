@@ -25,6 +25,7 @@ dependencies:
 - diagrams-rasterific
 - JuicyPixels
 - optparse-applicative
+- time
 
 library:
   source-dirs: src
@@ -37,5 +38,11 @@ executables:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    other-modules: []
+    dependencies:
+    - diagrams-braille
+  brlclock:
+    main:                Clock.hs
+    source-dirs:         app
     dependencies:
     - diagrams-braille

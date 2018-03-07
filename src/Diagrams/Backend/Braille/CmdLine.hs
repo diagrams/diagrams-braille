@@ -53,32 +53,17 @@ instance TypeableFloat n => Mainable (QDiagram Rasterific V2 n Any) where
   mainRender opts d = chooseRender opts d
 
 chooseRender :: TypeableFloat n => DiagramOpts -> QDiagram Rasterific V2 n Any -> IO () -- -> QDiagram Rasterific V2 n Any -> IO ()
-chooseRender opts d
-  | null path = putStr $ rasterBraille sz d
-  | otherwise = renderBraille path sz d
+chooseRender opts d | null path = putStr $ rasterBraille sz d
+                    | otherwise = renderBraille path sz d
   where
     path = opts^.output
     sz   = fromIntegral <$> mkSizeSpec2D (opts^.width) (opts^.height)
 
--- | @multiMain@ is like 'defaultMain', except instead of a single
---   diagram it takes a list of diagrams paired with names as input.
---   The generated executable then takes a @--selection@ option
---   specifying the name of the diagram that should be rendered.  The
---   list of available diagrams may also be printed by passing the
---   option @--list@.
---
---   Example usage:
---
--- @
--- $ ghc --make MultiTest
--- [1 of 1] Compiling Main             ( MultiTest.hs, MultiTest.o )
--- Linking MultiTest ...
--- $ ./MultiTest --list
--- Available diagrams:
---   foo bar
--- $ ./MultiTest --selection bar -o Bar.png -w 200
--- @
-
+-- | @multiMain@ takes a list of diagrams paired with names as input.
+-- The generated executable then takes a @--selection@ option
+-- specifying the name of the diagram that should be rendered.  The
+-- list of available diagrams may also be printed by passing the
+-- option @--list@.
 multiMain :: [(String, Diagram Rasterific)] -> IO ()
 multiMain = mainWith
 
