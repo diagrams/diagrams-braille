@@ -71,47 +71,35 @@ module Diagrams.Backend.Braille
   ) where
 
 import           Codec.Picture
-import           Data.Bits (setBit)
-import           Data.Char (chr)
-import           Diagrams.Core.Compile
-import           Diagrams.Core.Transform             (matrixHomRep)
-import           Diagrams.Core.Types
-
-import           Diagrams.Prelude                    hiding (local)
-import           Diagrams.TwoD.Adjust                (adjustDia2D)
-import           Diagrams.TwoD.Text                  hiding (Font)
-
-import           Codec.Picture.ColorQuant            (defaultPaletteOptions)
 import           Codec.Picture.Types                 (convertImage,
-                                                      convertPixel,
-                                                      dropTransparency,
                                                       promoteImage)
-
-
-import qualified Graphics.Rasterific                 as R
-import           Graphics.Rasterific.Texture         (Gradient,
-                                                      linearGradientTexture, radialGradientWithFocusTexture,
-                                                      transformTexture,
-                                                      uniformTexture,
-                                                      withSampler)
-
-import qualified Graphics.Rasterific.Transformations as R
-
-import           Control.Monad.Reader
-import           Control.Monad.Writer hiding ((<>))
-import           Diagrams.Backend.Rasterific.Text
-
-import           Data.ByteString.Lazy                (ByteString)
-import qualified Data.ByteString.Lazy                as L (writeFile)
-import qualified Data.Foldable                       as F
-import           Data.Hashable                       (Hashable (..))
+import           Control.Lens                        hiding ((#), transform)
+import           Control.Monad                       (when)
+import           Control.Monad.Reader                (ReaderT, runReaderT, ask, local)
+import           Control.Monad.Writer                (Writer, execWriter, tell)
+import           Data.Bits                           (setBit)
+import           Data.Char                           (chr)
+import           Data.Foldable                       (foldMap)
+import           Data.Hashable                       (Hashable(..))
 import           Data.Maybe                          (fromMaybe)
 import           Data.Tree
 import           Data.Typeable
-import           Data.Word                           (Word8)
-
+import           Diagrams.Backend.Rasterific.Text
+import           Diagrams.Core.Compile
+import           Diagrams.Core.Transform             (matrixHomRep)
+import           Diagrams.Core.Types
+import           Diagrams.Prelude                    hiding (local)
+import           Diagrams.TwoD.Adjust                (adjustDia2D)
+import           Diagrams.TwoD.Text                  hiding (Font)
+import qualified Graphics.Rasterific                 as R
+import           Graphics.Rasterific.Texture         (Gradient,
+                                                      linearGradientTexture,
+                                                      radialGradientWithFocusTexture,
+                                                      transformTexture,
+                                                      uniformTexture,
+                                                      withSampler)
+import qualified Graphics.Rasterific.Transformations as R
 import           System.FilePath                     (takeExtension)
-import Control.Lens hiding ((#), transform)
 
 data Braille = Braille deriving (Eq, Ord, Read, Show, Typeable)
 
@@ -160,11 +148,6 @@ instance TypeableFloat n => Backend Braille V2 n where
 
   adjustDia c opts d = adjustDia2D sizeSpec c opts (d # reflectY)
 
-frob = map f where
-  f ([[a, b], [c, d], [e, f]], R.V2 x y, str) = (round $ x' / 2, round $ y' / 4, str) where
-    x' = a * realToFrac x + c * realToFrac y + e
-    y' = b * realToFrac x + d * realToFrac y + f
-
 drawText ((x, y), t) = unlines . flip (foldr $ uncurry f) (zip [x..] t) . lines where
   f x' = set $ element y . element x'
 
@@ -173,7 +156,7 @@ fromRTree (Node n rs) = case n of
   RPrim p                 -> render Braille p
   RStyle sty              -> R $ local (<> sty) r
   _                       -> R r
-  where R r = F.foldMap fromRTree rs
+  where R r = foldMap fromRTree rs
 
 runR :: Render Braille V2 n -> RenderM n ()
 runR (R r) = r
@@ -394,8 +377,8 @@ img2brl = img2brl' 8 f where
   f (PixelRGBA8 _ _ _ a) | a > 20 = True
   f _ = False
 
-img2brl' dots set img = unlines $
-                        map (\y -> map (f y) columnIndices) lineIndices where
+img2brl' dots c img = unlines $
+                      map (\y -> map (f y) columnIndices) lineIndices where
   f y x = chr $ foldr ($) 0x2800 $ take dots $ zipWith ($) [
                                     g y x       True
     , let y' = y+1 in               g y' x    $ y' < h
@@ -405,7 +388,7 @@ img2brl' dots set img = unlines $
     , let {y'' = y+2; x' = x+1} in  g y'' x'  $ y'' < h && x' < w
     , let y''' = y+3 in             g y''' x  $ y''' < h
     , let {y''' = y+3; x' = x+1} in g y''' x' $ y''' < h && x' < w] [0..]
-  g y x True b a | set $ pixelAt img x y = setBit a b
+  g y x True b a | c $ pixelAt img x y = setBit a b
   g _ _ _ _ a = a
   lineIndices = [0, (dots `div` 2) .. h - 1]
   columnIndices = [0, 2 .. w - 1]
