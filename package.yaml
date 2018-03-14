@@ -29,6 +29,7 @@ dependencies:
 - hashable
 - JuicyPixels
 - mtl
+- lens
 - optparse-applicative
 - Rasterific
 - time

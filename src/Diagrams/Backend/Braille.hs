@@ -26,9 +26,9 @@
 --   images dynamically based on user input, and so on).
 --
 -- * For the most flexibility (/e.g./ if you want access to the
---   resulting Rasterific value directly in memory without writing it to
+--   resulting Braille value directly in memory without writing it to
 --   disk), you can manually invoke the 'renderDia' method from the
---   'Diagrams.Core.Types.Backend' instance for @Rasterific@.  In particular,
+--   'Diagrams.Core.Types.Backend' instance for @Braille@.  In particular,
 --   'Diagrams.Core.Types.renderDia' has the generic type
 --
 -- > renderDia :: b -> Options b v n -> QDiagram b v n m -> Result b v n
@@ -38,28 +38,28 @@
 -- of monoidal query annotations on the diagram.  'Options' and 'Result' are
 -- associated data and type families, respectively, which yield the
 -- type of option records and rendering results specific to any
--- particular backend.  For @b ~ Rasterific@, @v ~ V2@, and @n ~ n@, we have
+-- particular backend.  For @b ~ Braille@, @v ~ V2@, and @n ~ n@, we have
 --
--- > data Options Rasterific V2 n = RasterificOptions
+-- > data Options Braille V2 n = BrailleOptions
 -- >        { _size      :: SizeSpec2D n -- ^ The requested size of the output
 -- >        }
 --
 -- @
--- type family Result Rasterific V2 n = 'Image PixelRGBA8'
+-- type family Result Braille V2 n = String
 -- @
 --
 -- So the type of 'renderDia' resolves to
 --
 -- @
--- renderDia :: Rasterific -> Options Rasterific V2 n -> QDiagram Rasterific V2 n m -> 'Image PixelRGBA8'
+-- renderDia :: Braille -> Options Braille V2 n -> QDiagram Braille V2 n m -> String
 -- @
 --
--- which you could call like @renderDia Rasterific (RasterificOptions (mkWidth 250))
+-- which you could call like @renderDia Braille (BrailleOptions (mkWidth 80))
 -- myDiagram@.
 --
 -------------------------------------------------------------------------------
 module Diagrams.Backend.Braille
-  ( -- * Rasterific backend
+  ( -- * Braille backend
     Braille(..)
   , B -- rendering token
   , Options(..)
@@ -68,17 +68,6 @@ module Diagrams.Backend.Braille
   , rasterBraille
   , renderBraille
   , size
-
-    -- * Text with envelopes
-  , texterific
-  , texterific'
-
-    -- * Internals
-    -- | These are low level functions whose implimentaion may change in
-    --   the future. They're exported because they can sometimes be
-    --   useful.
-  , PaletteOptions (..)
-  , defaultPaletteOptions
   ) where
 
 import           Codec.Picture
@@ -109,6 +98,7 @@ import           Graphics.Rasterific.Texture         (Gradient,
 import qualified Graphics.Rasterific.Transformations as R
 
 import           Control.Monad.Reader
+import           Control.Monad.Writer hiding ((<>))
 import           Diagrams.Backend.Rasterific.Text
 
 import           Data.ByteString.Lazy                (ByteString)
@@ -121,6 +111,7 @@ import           Data.Typeable
 import           Data.Word                           (Word8)
 
 import           System.FilePath                     (takeExtension)
+import Control.Lens hiding ((#))
 
 data Braille = Braille deriving (Eq, Ord, Read, Show, Typeable)
 
@@ -132,48 +123,56 @@ type instance N Braille = Double
 -- | The custom monad in which intermediate drawing options take
 --   place; 'Graphics.Rasterific.Drawing' is Rasterific's own rendering
 --   monad.
-type RenderM n = ReaderT (Style V2 n) RenderR
+type RenderM n = ReaderT (Style V2 n) (Writer Draw)
+
+newtype Draw = Draw (R.Drawing PixelRGBA8 (), [((Int, Int), String)])
+
+instance Monoid Draw where
+  mempty = Draw (return (), mempty)
+  Draw (m1, l1) `mappend` Draw (m2, l2) = Draw (m1 >> m2, l1 <> l2)
 
 type RenderR = R.Drawing PixelRGBA8
 
-liftR :: RenderR a -> RenderM n a
-liftR = lift
+liftR :: RenderR () -> RenderM n ()
+liftR r = tell $ Draw (r, mempty)
 
-runRenderM :: TypeableFloat n => RenderM n a -> RenderR a
-runRenderM = (`runReaderT` sty) where
+
+runRenderM :: TypeableFloat n => RenderM n a -> Draw
+runRenderM = execWriter . (`runReaderT` sty) where
   sty = mempty # recommendFillColor transparent
 
 -- From Diagrams.Core.Types.
 instance TypeableFloat n => Backend Braille V2 n where
   newtype Render  Braille V2 n = R (RenderM n ())
   type Result  Braille V2 n = String
-  data Options Braille V2 n = RasterificOptions
+  data Options Braille V2 n = BrailleOptions
           { _sizeSpec  :: SizeSpec V2 n -- ^ The requested size of the output
           } deriving Show
 
   renderRTree _ opts t =
-    img2brl $ R.renderDrawing (round w) (round h) bgColor r
+    foldr drawText (img2brl (R.renderDrawing (round w) (round h) bgColor r)) txt
     where
-      r       = runRenderM . runR . fromRTree $ t
+      Draw (r, txt) = runRenderM . runR . fromRTree $ t
       V2 w h  = specToSize 100 (opts^.sizeSpec)
       bgColor = PixelRGBA8 0 0 0 0
 
   adjustDia c opts d = adjustDia2D sizeSpec c opts (d # reflectY)
 
+frob = map f where
+  f ([[a, b], [c, d], [e, f]], R.V2 x y, str) = (round $ x' / 2, round $ y' / 4, str) where
+    x' = a * realToFrac x + c * realToFrac y + e
+    y' = b * realToFrac x + d * realToFrac y + f
+
+drawText ((x, y), t) = unlines . f . lines where
+  f s = foldr g s (zip t [0..])
+  g (c, o) = set (element y . element (x+o)) c
+
 fromRTree :: TypeableFloat n => RTree Braille V2 n Annotation -> Render Braille V2 n
 fromRTree (Node n rs) = case n of
   RPrim p                 -> render Braille p
-  RStyle sty              -> R $ clip sty (local (<> sty) r)
-  RAnnot (OpacityGroup x) -> R $ mapReaderT (R.withGroupOpacity (round $ 255 * x)) r
+  RStyle sty              -> R $ local (<> sty) r
   _                       -> R r
   where R r = F.foldMap fromRTree rs
-
--- | Clip a render using the Clip from the style.
-clip :: TypeableFloat n => Style V2 n -> RenderM n () -> RenderM n ()
-clip sty r = go (sty ^. _clip)
-  where
-    go []     = r
-    go (p:ps) = mapReaderT (R.withClipping $ R.fill (renderPath p)) (go ps)
 
 runR :: Render Braille V2 n -> RenderM n ()
 runR (R r) = r
@@ -183,7 +182,7 @@ instance Monoid (Render Braille V2 n) where
   R rd1 `mappend` R rd2 = R (rd1 >> rd2)
 
 instance Hashable n => Hashable (Options Braille V2 n) where
-  hashWithSalt s (RasterificOptions sz) = s `hashWithSalt` sz
+  hashWithSalt s (BrailleOptions sz) = s `hashWithSalt` sz
 
 sizeSpec :: Lens' (Options Braille V2 n) (SizeSpec V2 n)
 sizeSpec = lens _sizeSpec (\o s -> o {_sizeSpec = s})
@@ -352,8 +351,11 @@ instance TypeableFloat n => Renderable (Text n) Braille where
           BoxAlignedText xt yt -> case getCorners bb of
             Just (P (V2 xl yl), P (V2 xu yu)) -> R.V2 (-lerp' xt xu xl) (lerp' yt yu yl)
             Nothing                           -> R.V2 0 0
-    liftR (R.withTransformation (rasterificMatTransf (tr <> reflectionY))
-          (R.withTexture fColor $ R.printTextAt fnt fs' p str))
+        [[a, b], [c, d], [e, f']] = map realToFrac <$> matrixHomRep tr
+        R.V2 x y = p
+        x' = a * realToFrac x + c * realToFrac y + e
+        y' = b * realToFrac x + d * realToFrac y + f'
+    tell $ Draw (return (), [((round $ x' / 2, round $ y' / 4), str)])
     where
       lerp' t u v = realToFrac $ t * u + (1 - t) * v
 
@@ -379,7 +381,7 @@ instance TypeableFloat n => Renderable (DImage n Embedded) Braille where
 
 -- Saving files --------------------------------------------------------
 
-rasterBraille sz = renderDia Braille (RasterificOptions sz)
+rasterBraille sz = renderDia Braille (BrailleOptions sz)
 
 -- | Render a 'Braille' diagram to a file with the given size. The
 --   format is determined by the extension (@.png@, @.tif@, @.bmp@, @.jpg@ and
@@ -390,7 +392,7 @@ renderBraille outFile spec d =
   case takeExtension outFile of
     _      -> writeBrl outFile brl
   where
-    brl = renderDia Braille (RasterificOptions spec) d
+    brl = renderDia Braille (BrailleOptions spec) d
 
 writeBrl = writeFile
 
