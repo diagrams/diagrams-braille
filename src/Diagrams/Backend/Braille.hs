@@ -111,7 +111,7 @@ import           Data.Typeable
 import           Data.Word                           (Word8)
 
 import           System.FilePath                     (takeExtension)
-import Control.Lens hiding ((#))
+import Control.Lens hiding ((#), transform)
 
 data Braille = Braille deriving (Eq, Ord, Read, Show, Typeable)
 
@@ -133,9 +133,11 @@ instance Monoid Draw where
 
 type RenderR = R.Drawing PixelRGBA8
 
-liftR :: RenderR () -> RenderM n ()
-liftR r = tell $ Draw (r, mempty)
+tellR :: RenderR () -> RenderM n ()
+tellR r = tell $ Draw (r, mempty)
 
+tellT :: Int -> Int -> String -> RenderM n ()
+tellT x y t = tell $ Draw (pure (), [((x, y), t)])
 
 runRenderM :: TypeableFloat n => RenderM n a -> Draw
 runRenderM = execWriter . (`runReaderT` sty) where
@@ -163,9 +165,8 @@ frob = map f where
     x' = a * realToFrac x + c * realToFrac y + e
     y' = b * realToFrac x + d * realToFrac y + f
 
-drawText ((x, y), t) = unlines . f . lines where
-  f s = foldr g s (zip t [0..])
-  g (c, o) = set (element y . element (x+o)) c
+drawText ((x, y), t) = unlines . flip (foldr $ uncurry f) (zip [x..] t) . lines where
+  f x' = set $ element y . element x'
 
 fromRTree :: TypeableFloat n => RTree Braille V2 n Annotation -> Render Braille V2 n
 fromRTree (Node n rs) = case n of
@@ -331,31 +332,24 @@ instance TypeableFloat n => Renderable (Path V2 n) Braille where
         prms = concat primList
 
     when canFill $
-      liftR (R.withTexture (rasterificTexture f o) $ R.fillWithMethod rule prms)
+      tellR (R.withTexture (rasterificTexture f o) $ R.fillWithMethod rule prms)
 
-    liftR (R.withTexture (rasterificTexture s o) $ mkStroke l j c d primList)
+    tellR (R.withTexture (rasterificTexture s o) $ mkStroke l j c d primList)
 
 instance TypeableFloat n => Renderable (Text n) Braille where
   render _ (Text tr al str) = R $ do
     fs    <- views _fontSizeU (fromMaybe 12)
     slant <- view _fontSlant
     fw    <- view _fontWeight
-    f     <- view _fillTexture
-    o     <- view _opacity
-    let fColor = rasterificTexture f o
-        fs'    = R.PointSize (realToFrac fs)
+    let fs'    = R.PointSize (realToFrac fs)
         fnt    = fromFontStyle slant fw
         bb     = textBoundingBox fnt fs' str
-        p      = case al of
-          BaselineText         -> R.V2 0 0
+        P (V2 x y) = transform tr $ case al of
+          BaselineText         -> 0 ^& 0
           BoxAlignedText xt yt -> case getCorners bb of
-            Just (P (V2 xl yl), P (V2 xu yu)) -> R.V2 (-lerp' xt xu xl) (lerp' yt yu yl)
-            Nothing                           -> R.V2 0 0
-        [[a, b], [c, d], [e, f']] = map realToFrac <$> matrixHomRep tr
-        R.V2 x y = p
-        x' = a * realToFrac x + c * realToFrac y + e
-        y' = b * realToFrac x + d * realToFrac y + f'
-    tell $ Draw (return (), [((round $ x' / 2, round $ y' / 4), str)])
+            Just (P (V2 xl yl), P (V2 xu yu)) -> (-lerp' xt xu xl) ^& lerp' yt yu yl
+            Nothing                           -> 0 ^& 0
+    tellT (round $ x / 2) (round $ y / 4) str
     where
       lerp' t u v = realToFrac $ t * u + (1 - t) * v
 
@@ -369,7 +363,7 @@ toImageRGBA8 (ImageCMYK8 i)  = promoteImage (convertImage i :: Image PixelRGB8)
 toImageRGBA8 _               = error "Unsupported Pixel type"
 
 instance TypeableFloat n => Renderable (DImage n Embedded) Braille where
-  render _ (DImage iD w h tr) = R $ liftR
+  render _ (DImage iD w h tr) = R $ tellR
                                (R.withTransformation
                                (rasterificMatTransf (tr <> reflectionY))
                                (R.drawImage img 0 p))
