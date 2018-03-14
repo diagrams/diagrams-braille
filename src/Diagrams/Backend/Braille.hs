@@ -77,8 +77,7 @@ import           Diagrams.Core.Compile
 import           Diagrams.Core.Transform             (matrixHomRep)
 import           Diagrams.Core.Types
 
-import           Diagrams.Prelude                    hiding (height, local,
-                                                      opacity, output, width)
+import           Diagrams.Prelude                    hiding (local)
 import           Diagrams.TwoD.Adjust                (adjustDia2D)
 import           Diagrams.TwoD.Text                  hiding (Font)
 
