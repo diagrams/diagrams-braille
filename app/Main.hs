@@ -10,7 +10,9 @@ d = f 1 `atop` f (sqrt 2 / 2) `atop` f (sqrt 2 * (sqrt 2 / 2) / 2) where
 
 main :: IO ()
 main = multiMain [
-    ("triangle", triangle 1)
+    ("a", vcat $ [text "Hello" <> rect 5 2, text "World!" <> rect 6 2])
+  , ("b", atPoints (rotateBy (1/24) (dodecagon 1)) (map (baselineText.show) $ reverse $ take 12 $ drop 4 $ cycle [0..11]) <> rotateBy (1/24) (dodecagon 1.2))
+  , ("triangle", triangle 1)
   , ("square", square 1)
   , ("pentagon", pentagon 1)
   , ("hexagon", hexagon 1)
