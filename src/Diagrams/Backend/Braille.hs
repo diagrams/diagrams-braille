@@ -116,12 +116,10 @@ type RenderM n = ReaderT (Style V2 n) (Writer Draw)
 newtype Draw = Draw (R.Drawing PixelRGBA8 (), [((Int, Int), String)])
 
 instance Monoid Draw where
-  mempty = Draw (return (), mempty)
+  mempty = Draw (pure (), mempty)
   Draw (m1, l1) `mappend` Draw (m2, l2) = Draw (m1 >> m2, l1 <> l2)
 
-type RenderR = R.Drawing PixelRGBA8
-
-tellR :: RenderR () -> RenderM n ()
+tellR :: R.Drawing PixelRGBA8 () -> RenderM n ()
 tellR r = tell $ Draw (r, mempty)
 
 tellT :: Int -> Int -> String -> RenderM n ()
@@ -131,16 +129,15 @@ runRenderM :: TypeableFloat n => RenderM n a -> Draw
 runRenderM = execWriter . (`runReaderT` sty) where
   sty = mempty # recommendFillColor transparent
 
--- From Diagrams.Core.Types.
 instance TypeableFloat n => Backend Braille V2 n where
-  newtype Render  Braille V2 n = R (RenderM n ())
-  type Result  Braille V2 n = String
+  newtype Render Braille V2 n = R (RenderM n ())
+  type Result Braille V2 n = String
   data Options Braille V2 n = BrailleOptions
           { _sizeSpec  :: SizeSpec V2 n -- ^ The requested size of the output
           } deriving Show
 
   renderRTree _ opts t =
-    foldr drawText (img2brl (R.renderDrawing (round w) (round h) bgColor r)) txt
+    foldr drawText (img2brl $ R.renderDrawing (round w) (round h) bgColor r) txt
     where
       Draw (r, txt) = runRenderM . runR . fromRTree $ t
       V2 w h  = specToSize 100 (opts^.sizeSpec)
@@ -148,8 +145,8 @@ instance TypeableFloat n => Backend Braille V2 n where
 
   adjustDia c opts d = adjustDia2D sizeSpec c opts (d # reflectY)
 
-drawText ((x, y), t) = unlines . flip (foldr $ uncurry f) (zip [x..] t) . lines where
-  f x' = set $ element y . element x'
+drawText ((x, y), t) = unlines . flip (foldr $ uncurry f) (zip [x..] t) . lines
+  where f x' = set $ element y . element x'
 
 fromRTree :: TypeableFloat n => RTree Braille V2 n Annotation -> Render Braille V2 n
 fromRTree (Node n rs) = case n of
@@ -290,7 +287,7 @@ renderPath p = (map . map) renderSeg (pathLocSegments p)
 
 -- Stroke both dashed and solid lines.
 mkStroke :: TypeableFloat n => n ->  R.Join -> (R.Cap, R.Cap) -> Maybe (R.DashPattern, n)
-      -> [[R.Primitive]] -> RenderR ()
+      -> [[R.Primitive]] -> R.Drawing PixelRGBA8 ()
 mkStroke (realToFrac -> l) j c d primList =
   maybe (mapM_ (R.stroke l j c) primList)
         (\(dsh, off) -> mapM_ (R.dashedStrokeWithOffset (realToFrac off) dsh l j c) primList)
