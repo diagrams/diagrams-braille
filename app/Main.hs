@@ -9,8 +9,13 @@ import Diagrams.Prelude
 d = f 1 `atop` f (sqrt 2 / 2) `atop` f (sqrt 2 * (sqrt 2 / 2) / 2) where
   f x = circle x `atop` square (x * sqrt 2)
 
+sol = circle 1 <> atPoints (hexagon 1) (repeat $ circle 1)
+fol = circle 1 <> atPoints (hexagon 1) (map (`rotateBy` pedal) [0, 1/6 ..]) where
+  pedal = circle 1 <> circle 1 # translateX 1 # rotateBy (-1/3)
+
 main = multiMain [
     ("a", vcat $ [text "Hello" <> rect 5 2, text "World!" <> rect 6 2])
+  , ("floweroflife", fol), ("seedoflife", sol)
   , ("b", atPoints (rotateBy (1/24) (dodecagon 1)) (map (baselineText.show) $ reverse $ take 12 $ drop 4 $ cycle [0..11]) <> rotateBy (1/24) (dodecagon 1.2))
   , ("d", d)
   , ("triangle", triangle 1)
