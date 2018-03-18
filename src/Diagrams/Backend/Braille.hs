@@ -3,10 +3,12 @@
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE FlexibleInstances         #-}
 {-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE TypeFamilies              #-}
 {-# LANGUAGE TypeSynonymInstances      #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE ViewPatterns              #-}
 
 -------------------------------------------------------------------------------
@@ -114,20 +116,17 @@ type instance N Braille = Double
 type RenderM n = ReaderT (Style V2 n) (Writer Draw)
 
 newtype Draw = Draw (R.Drawing PixelRGBA8 (), [((Int, Int), String)])
-
-instance Monoid Draw where
-  mempty = Draw (pure (), mempty)
-  Draw (m1, l1) `mappend` Draw (m2, l2) = Draw (m1 >> m2, l1 <> l2)
+             deriving (Monoid)
 
 tellR :: R.Drawing PixelRGBA8 () -> RenderM n ()
-tellR r = tell $ Draw (r, mempty)
+tellR = tell . Draw . (,mempty)
 
 tellT :: Int -> Int -> String -> RenderM n ()
 tellT x y t = tell $ Draw (pure (), [((x, y), t)])
 
 runRenderM :: TypeableFloat n => RenderM n a -> Draw
 runRenderM = execWriter . (`runReaderT` sty) where
-  sty = mempty # recommendFillColor transparent
+  sty = mempty # recommendFillColor transparent # recommendFontSize (output 4)
 
 instance TypeableFloat n => Backend Braille V2 n where
   newtype Render Braille V2 n = R (RenderM n ())
