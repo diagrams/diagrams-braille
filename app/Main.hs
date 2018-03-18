@@ -41,23 +41,30 @@ instance Parseable Opts where
       clock <$> arg (metavar "HOUR") <*> arg (metavar "MINUTE")
     , cmd "decagon" "" $ decagon <$> arg mempty
     , cmd "dodecagon" "" $ dodecagon <$> arg mempty
-    , cmd "flower-of-life" "" (pure fol)
+    , cmd "flower-of-life" "The flower of life." $ pure fol
     , cmd "hendecagon" "" $ hendecagon <$> arg mempty
     , cmd "heptagon" "" $ heptagon <$> arg mempty
     , cmd "hexagon" "" $ hexagon <$> arg mempty
-    , cmd "hilbert" "" $ strokeT . hilbert <$> arg (metavar "ORDER")
+    , cmd "hilbert" "A hilbert curve of the given ORDER." $
+      strokeT . hilbert <$> arg (metavar "ORDER")
     , cmd "nonagon" "" $ nonagon <$> arg mempty
     , cmd "octagon" "" $ octagon <$> arg mempty
     , cmd "pentagon" "" $ pentagon <$> arg mempty
-    , cmd "seed-of-life" "" (pure sol)
+    , cmd "rect" "A rectangle." $ rect <$> arg mempty <*> arg mempty
+    , cmd "seed-of-life" "The \"seed of life\"." $ pure sol
     , cmd "square" "" $ square <$> arg mempty
     , cmd "triangle" "" $ triangle <$> arg mempty
     ] where cmd s d p = command s $ info (foldr ($) <$> p <*> many modifier) $
                         progDesc d
             arg = argument auto
 
-modifier = flag' centerXY (long "centerXY")
+modifier = flag' alignL (long "alignL") <|> flag' alignR (long "alignR")
+       <|> flag' alignT (long "alignT") <|> flag' alignB (long "alignB")
+       <|> flag' centerX (long "centerX" <> help "Center the local origin along the X-axis.")
+       <|> flag' centerY (long "centerY" <> help "Center the local origin along the Y-axis.")
+       <|> flag' centerXY (long "centerXY" <> help "Center along both the X- and Y-axes.")
        <|> rotateBy <$> option auto (long "rotateBy")
+       <|> scaleX <$> option auto (long "scaleX" <> metavar "FACTOR" <> help "Scale a diagram by the given factor in the x (horizontal) direction.")
        <|> flag' showOrigin (long "showOrigin")
        <|> translateX <$> option auto (long "translateX")
        <|> translateY <$> option auto (long "translateY")
