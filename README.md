@@ -34,4 +34,35 @@ provided which allows to create diagrams from a number of primitive
 functions and optional arguments.  It basically exports a minimal
 version of diagrams-lib to the command-line. See ``brldia --help`` for details.
 
+## Usage
+
+```shell
+brldia circle 1
+```
+
+```
+⢠⠖⠋⠉⠉⠙⠲⡄
+⡏⠀⠀⠀⠀⠀⠀⢹
+⣇⠀⠀⠀⠀⠀⠀⣸
+⠘⠦⣄⣀⣀⣠⠴⠃
+```
+
+You can also combine various shapes into a single diagram:
+
+```shell
+brldia --width=32 circle 1 square 1.4
+```
+
+```
+⠀⠀⢀⡤⠖⠋⠉⠉⠉⠉⠙⠲⢤⡀⠀⠀
+⠀⡴⡏⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⢹⢦⠀
+⡼⠁⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠈⢧
+⡇⠀⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⢸
+⡇⠀⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⢸
+⢳⡀⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⢀⡞
+⠀⠳⣇⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣸⠞⠀
+⠀⠀⠈⠓⠦⣄⣀⣀⣀⣀⣠⠴⠚⠁⠀⠀
+```
+
+See ``--help`` for a full list of available commands and options.
 

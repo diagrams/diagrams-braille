@@ -1,3 +1,4 @@
+-- A monoidal command line interface to some diagrams primitives
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -71,7 +72,7 @@ commands = some $ hsubparser $ mconcat [
   , cmd "decagon" "A regular decagon, with sides of the given length and base parallel to the x-axis." $
     decagon <$> arg (metavar "LENGTH")
   , cmd "hendecagon" "A regular hendecagon, with sides of the given length and base parallel to the x-axis." $
-     hendecagon <$> arg (metavar "LENGTH")
+    hendecagon <$> arg (metavar "LENGTH")
   , cmd "dodecagon" "A regular dodecagon, with sides of the given length and base parallel to the x-axis." $
     dodecagon <$> arg (metavar "LENGTH")
   , cmd "circle" "A circle of the given radius, centered at the origin." $
@@ -80,7 +81,7 @@ commands = some $ hsubparser $ mconcat [
     cubicSpline <$> switch (long "closed")
                 <*> some (curry p2 <$> arg (metavar "X") <*> arg (metavar "Y"))
   , cmd "arrowAt" "" $
-    (\a b c d -> arrowAt (P (V2 a b)) (V2 c d)) <$> arg (metavar "px")
+    (\a b c d -> arrowAt (p2 (a, b)) (V2 c d)) <$> arg (metavar "px")
                                                 <*> arg (metavar "py")
                                                 <*> arg (metavar "vx")
                                                 <*> arg (metavar "vy")
