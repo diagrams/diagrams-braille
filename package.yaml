@@ -1,5 +1,5 @@
 name:                diagrams-braille
-version:             0.1.0.1
+version:             0.1.0.2
 github:              "mlang/diagrams-braille"
 license:             BSD3
 author:              "Mario Lang"
@@ -9,14 +9,13 @@ copyright:           "2018 Mario Lang"
 extra-source-files:
 - README.md
 
-# Metadata used when publishing your package
 synopsis:            Braille diagrams with plain text
 category:            Graphics
 
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on Github at <https://github.com/mlang/diagrams-braille#readme>
+description:         Please see the README at <https://github.com/mlang/diagrams-braille#readme>
 
 dependencies:
 - base >= 4.7 && < 5
