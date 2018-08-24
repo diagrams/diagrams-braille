@@ -116,7 +116,7 @@ type instance N Braille = Double
 type RenderM n = ReaderT (Style V2 n) (Writer Draw)
 
 newtype Draw = Draw (R.Drawing PixelRGBA8 (), [((Int, Int), String)])
-             deriving (Monoid)
+             deriving (Semigroup, Monoid)
 
 tellR :: R.Drawing PixelRGBA8 () -> RenderM n ()
 tellR = tell . Draw . (,mempty)
@@ -157,9 +157,11 @@ fromRTree (Node n rs) = case n of
 runR :: Render Braille V2 n -> RenderM n ()
 runR (R r) = r
 
+instance Semigroup (Render Braille V2 n) where
+  R rd1 <> R rd2 = R (rd1 >> rd2)
+
 instance Monoid (Render Braille V2 n) where
   mempty = R $ return ()
-  R rd1 `mappend` R rd2 = R (rd1 >> rd2)
 
 instance Hashable n => Hashable (Options Braille V2 n) where
   hashWithSalt s (BrailleOptions sz) = s `hashWithSalt` sz
