@@ -29,7 +29,7 @@ dependencies:
 - mtl
 - lens
 - optparse-applicative
-- Rasterific
+- Rasterific >= 0.7.4 && < 0.8
 - time
 
 library:

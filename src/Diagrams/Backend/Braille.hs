@@ -158,10 +158,10 @@ runR :: Render Braille V2 n -> RenderM n ()
 runR (R r) = r
 
 instance Semigroup (Render Braille V2 n) where
-  R rd1 <> R rd2 = R (rd1 >> rd2)
+  R rd1 <> R rd2 = R $ rd1 >> rd2
 
 instance Monoid (Render Braille V2 n) where
-  mempty = R $ return ()
+  mempty = R $ pure ()
 
 instance Hashable n => Hashable (Options Braille V2 n) where
   hashWithSalt s (BrailleOptions sz) = s `hashWithSalt` sz
@@ -290,8 +290,8 @@ renderPath p = (map . map) renderSeg (pathLocSegments p)
 mkStroke :: TypeableFloat n => n ->  R.Join -> (R.Cap, R.Cap) -> Maybe (R.DashPattern, n)
       -> [[R.Primitive]] -> R.Drawing PixelRGBA8 ()
 mkStroke (realToFrac -> l) j c d primList =
-  maybe (mapM_ (R.stroke l j c) primList)
-        (\(dsh, off) -> mapM_ (R.dashedStrokeWithOffset (realToFrac off) dsh l j c) primList)
+  maybe (R.stroke l j c $ concat primList)
+        (\(dsh, off) -> R.dashedStrokeWithOffset (realToFrac off) dsh l j c $ concat primList)
         d
 
 instance TypeableFloat n => Renderable (Path V2 n) Braille where
