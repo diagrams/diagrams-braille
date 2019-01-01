@@ -34,13 +34,13 @@ hilbert n = hilbert' (n-1) # reflectY <> vrule 1
   where hilbert' = rotateBy (1/4) . hilbert
 
 newtype Opts = Opts { draw :: Diagram B }
-instance Parseable Opts where parser = Opts . mconcat <$> commands
+instance Parseable Opts where parser = Opts . mconcat <$> some diagram
 
-commands :: ( TypeableFloat n, Enum n, Read n
-            , Renderable (Text n) b, Renderable (Path V2 n) b
-            )
-         => Parser [QDiagram b V2 n Any]
-commands = some $ hsubparser $ mconcat [
+diagram :: ( TypeableFloat n, Enum n, Read n
+           , Renderable (Text n) b, Renderable (Path V2 n) b
+           )
+        => Parser (QDiagram b V2 n Any)
+diagram = hsubparser $ mconcat [
     commandGroup "Diagrams"
   , cmd "strut" "A diagram which produces no output, but with respect to alignment and envelope acts like a 1-dimensional segment oriented along the vector denoted by vx and vy, with local origin at its center." $
     (\x y -> strut (V2 x y)) <$> arg (metavar "vx") <*> arg (metavar "vy")
