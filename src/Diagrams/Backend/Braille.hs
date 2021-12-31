@@ -133,7 +133,7 @@ instance TypeableFloat n => Backend Braille V2 n where
   type Result Braille V2 n = String
   data Options Braille V2 n = BrailleOptions
           { _sizeSpec  :: SizeSpec V2 n -- ^ The requested size of the output
-          } deriving Show
+          } deriving (Show, Eq)
 
   renderRTree _ opts t =
     foldr drawText (img2brl $ R.renderDrawing (round w) (round h) bgColor r) txt
