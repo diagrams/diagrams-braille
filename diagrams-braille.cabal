@@ -14,7 +14,7 @@ license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     README.md
-tested-with:    GHC ==8.10.7 || ==9.0.2 || ==9.2.7 || ==9.4.5 || ==9.6.1
+tested-with:    GHC ==8.10.7 || ==9.0.2 || ==9.2.8 || ==9.4.8 || ==9.6.3 || ==9.8.1
 
 source-repository head
   type: git
