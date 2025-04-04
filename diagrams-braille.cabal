@@ -14,7 +14,7 @@ license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     README.md
-tested-with:    GHC ==8.10.7 || ==9.0.2 || ==9.2.8 || ==9.4.8 || ==9.6.5 || ==9.8.2 || ==9.10.1
+tested-with:    GHC ==8.10.7 || ==9.0.2 || ==9.2.8 || ==9.4.8 || ==9.6.5 || ==9.8.2 || ==9.10.1 || ==9.12.1
 
 source-repository head
   type: git
@@ -34,8 +34,8 @@ library
     , base >=4.7 && <5
     , containers
     , diagrams-core >=1.4 && <1.6
-    , diagrams-lib ==1.4.*
-    , diagrams-rasterific ==1.4.*
+    , diagrams-lib >=1.4 && <1.6
+    , diagrams-rasterific >=1.4 && <1.6
     , filepath
     , hashable
     , lens
@@ -58,8 +58,8 @@ executable brldia
     , containers
     , diagrams-braille
     , diagrams-core >=1.4 && <1.6
-    , diagrams-lib ==1.4.*
-    , diagrams-rasterific ==1.4.*
+    , diagrams-lib >=1.4 && <1.6
+    , diagrams-rasterific >=1.4 && <1.6
     , filepath
     , hashable
     , lens
