@@ -1,6 +1,6 @@
 cabal-version: 1.12
 name:           diagrams-braille
-version:        0.1.1
+version:        0.1.2
 synopsis:       Braille diagrams with plain text
 description:    Please see the README at <https://github.com/diagrams/diagrams-braille#readme>
 category:       Graphics
